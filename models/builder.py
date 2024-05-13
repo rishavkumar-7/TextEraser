@@ -39,7 +39,7 @@ def _construct_model(args):
     model_type = args.pretrained_model
     model,tokenizer = _MODEL_TYPES[model_type](args) # call the tiny llama class from models.model_zoo
 
-    model, device = load_model_to_device(model, args)
+    device = load_model_to_device(model, args)
     # device ="cuda" if torch.cuda.is_available() else "cpu"
     # model.to(device)
     logger.info(f"Device used for model: {device}")
@@ -52,7 +52,6 @@ def load_model_to_device(model, args):
     if torch.cuda.is_available():
         # Transfer the model to the current GPU device
         #==============================================
-        model=model.to(f"cuda:{cur_device}")
         # model = model.cuda(device=cur_device)
         #============================================
         # Use multi-process data parallel model in the multi-gpu setting
@@ -63,9 +62,12 @@ def load_model_to_device(model, args):
                 find_unused_parameters=True,
             )
     else:
-        model = model.to(args.device_type)
-    return model, cur_device
-
+        # model = model.to(args.device_type)
+        model=model #added to remove error : `.to` is not supported for `4-bit` or `8-bit` bitsandbytes models
+    # return model, cur_device
+    #############################################
+    return cur_device
+    ##############################################
 class DistributedDataParallel(torch.nn.parallel.DistributedDataParallel):
     """A wrapper for DistributedDataParallel."""
     # succeed all the attributes and methods of DistributedDataParallel
